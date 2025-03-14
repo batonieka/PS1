@@ -34,8 +34,35 @@ export function toBucketSets(buckets: BucketMap): Array<Set<Flashcard>> {
 export function getBucketRange(
   buckets: Array<Set<Flashcard>>
 ): { minBucket: number; maxBucket: number } | undefined {
-  // TODO: Implement this function
-  throw new Error("Implement me!");
+  // Initialize min and max buckets
+  let minBucket: number | null = null;
+  let maxBucket: number | null = null;
+  
+  // Find the first non-empty bucket
+  for (let i = 0; i < buckets.length; i++) {
+    const bucket = buckets[i];
+    if (bucket && bucket.size > 0) {
+      minBucket = i;
+      break;
+    }
+  }
+  
+  // If no non-empty buckets were found, return undefined
+  if (minBucket === null) {
+    return undefined;
+  }
+  
+  // Find the last non-empty bucket
+  for (let i = buckets.length - 1; i >= 0; i--) {
+    const bucket = buckets[i];
+    if (bucket && bucket.size > 0) {
+      maxBucket = i;
+      break;
+    }
+  }
+  
+  // At this point, minBucket is not null, so maxBucket cannot be null either
+  return { minBucket, maxBucket: maxBucket! };
 }
 
 /**
