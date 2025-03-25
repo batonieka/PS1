@@ -8,6 +8,7 @@
  * or you risk failing the autograder.
  */
 
+import { finished } from "stream";
 import { Flashcard, AnswerDifficulty, BucketMap } from "./flashcards";
 
 /**
@@ -37,7 +38,7 @@ export function getBucketRange(
   // Initialize min and max buckets
   let minBucket: number | null = null;
   let maxBucket: number | null = null;
-  
+  // this is the finished product !!!!!!!!!!
   // Find the first non-empty bucket
   for (let i = 0; i < buckets.length; i++) {
     const bucket = buckets[i];
