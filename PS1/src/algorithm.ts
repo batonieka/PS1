@@ -89,9 +89,20 @@ export function practice(
   buckets: Array<Set<Flashcard>>,
   day: number
 ): Set<Flashcard> {
-  // TODO: Implement this function
-  throw new Error("Implement me!");
+  const practiceSet = new Set<Flashcard>();
+
+  for (let i = 0; i < buckets.length; i++) {
+    if (buckets[i] && day % (2 ** i) === 0) {
+      // Explicitly tell TypeScript that buckets[i] is not undefined
+      for (const card of buckets[i]!) {
+        practiceSet.add(card);
+      }
+    }
+  }
+
+  return practiceSet;
 }
+
 
 /**
  * Updates a card's bucket number after a practice trial.
@@ -107,20 +118,51 @@ export function update(
   card: Flashcard,
   difficulty: AnswerDifficulty
 ): BucketMap {
-  // TODO: Implement this function
-  throw new Error("Implement me!");
+  const newBuckets = new Map(buckets);
+  let currentBucket = -1;
+  const bucketKeys = Array.from(newBuckets.keys());
+  const maxBucket = bucketKeys.length > 0 ? Math.max(...bucketKeys) : 0;
+
+  // Find the current bucket of the card
+  for (const [bucketNum, cards] of newBuckets.entries()) {
+    if (cards.has(card)) {
+      currentBucket = bucketNum;
+      cards.delete(card);
+      break;
+    }
+  }
+
+  if (currentBucket === -1) return newBuckets; // Card not found
+
+  let newBucket = currentBucket;
+  if (difficulty === AnswerDifficulty.Easy) {
+    newBucket = Math.min(currentBucket + 1, maxBucket);
+  } else if (difficulty === AnswerDifficulty.Hard) {
+    newBucket = Math.max(currentBucket - 1, 0);
+  }
+
+  if (!newBuckets.has(newBucket)) {
+    newBuckets.set(newBucket, new Set());
+  }
+  newBuckets.get(newBucket)!.add(card);
+
+  return newBuckets;
 }
 
-/**
- * Generates a hint for a flashcard.
- *
- * @param card flashcard to hint
- * @returns a hint for the front of the flashcard.
- * @spec.requires card is a valid Flashcard.
- */
+
+
+// * Computes statistics about the user's learning progress.
+// *
+// * @param buckets representation of learning buckets.
+// * @param history representation of user's answer history.
+// * @returns statistics about learning progress.
+// * @spec.requires [SPEC TO BE DEFINED]
 export function getHint(card: Flashcard): string {
-  // TODO: Implement this function (and strengthen the spec!)
-  throw new Error("Implement me!");
+  if (!card || !card.front) {
+    throw new Error("Invalid flashcard");
+  }
+
+  return card.front.substring(0, Math.max(1, Math.floor(card.front.length / 3))) + "...";
 }
 
 /**
@@ -131,8 +173,27 @@ export function getHint(card: Flashcard): string {
  * @returns statistics about learning progress.
  * @spec.requires [SPEC TO BE DEFINED]
  */
-export function computeProgress(buckets: any, history: any): any {
-  // Replace 'any' with appropriate types
-  // TODO: Implement this function (and define the spec!)
-  throw new Error("Implement me!");
+export function computeProgress(
+  buckets: Map<number, Set<Flashcard>>,
+  history: Array<{ card: Flashcard; difficulty: AnswerDifficulty }>
+): { totalCards: number; averageBucket: number; recentPerformance: number } {
+  let totalCards = 0;
+  let bucketSum = 0;
+  
+  for (const [bucketNum, cards] of buckets.entries()) {
+    totalCards += cards.size;
+    bucketSum += bucketNum * cards.size;
+  }
+  
+  const averageBucket = totalCards > 0 ? bucketSum / totalCards : 0;
+
+  const recentAttempts = history.slice(-10);
+  const recentPerformance =
+    recentAttempts.length > 0
+    ? recentAttempts.filter((attempt) => attempt.difficulty === AnswerDifficulty.Easy).length /
+    recentAttempts.length
+  : 0;
+
+
+  return { totalCards, averageBucket, recentPerformance };
 }
